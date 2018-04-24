@@ -17,7 +17,7 @@ namespace RESTfulAPI
     public class Startup
     {
 
-        public static IConfiguration Configuration;
+        public static IConfiguration Configuration { get; private set; }
 
         public Startup(IConfiguration configuration) {
             Configuration = configuration;
@@ -29,7 +29,7 @@ namespace RESTfulAPI
         {
             services.AddMvc();
 
-            var connectionString = Configuration["conncetionStrings:libraryDBConncectionString"];
+            var connectionString = Startup.Configuration["connectionStrings:libraryDBConncectionString"];
             services.AddDbContext<LibraryContext>(o => o.UseSqlServer(connectionString));
 
             services.AddScoped<ILibraryRepository, LibraryRepository>();
