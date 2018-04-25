@@ -14,7 +14,7 @@ namespace RESTfulAPI.Migrations {
                 .HasAnnotation("ProductVersion", "1.0.1")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Library.API.Entities.Author", b =>
+            modelBuilder.Entity("LRESTfulAPI.Entities.Author", b =>
             {
                 b.Property<Guid>("Id")
                     .ValueGeneratedOnAdd();
@@ -38,7 +38,7 @@ namespace RESTfulAPI.Migrations {
                 b.ToTable("Authors");
             });
 
-            modelBuilder.Entity("Library.API.Entities.Book", b =>
+            modelBuilder.Entity("RESTfulAPI.Entities.Book", b =>
             {
                 b.Property<Guid>("Id")
                     .ValueGeneratedOnAdd();
@@ -59,7 +59,7 @@ namespace RESTfulAPI.Migrations {
                 b.ToTable("Books");
             });
 
-            modelBuilder.Entity("Library.API.Entities.Book", b =>
+            modelBuilder.Entity("RESTfulAPI.Entities.Book", b =>
             {
                 b.HasOne("Library.API.Entities.Author", "Author")
                     .WithMany("Books")

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using RESTfulAPI.Entities;
 using RESTfulAPI.Services;
+using RESTfulAPI.Helpers;
 
 namespace RESTfulAPI
 {
@@ -42,13 +43,29 @@ namespace RESTfulAPI
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             } else {
-                app.UseExceptionHandler();
+                app.UseExceptionHandler(appBuilder => {
+                    appBuilder.Run(async context => {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("Unexpected fault happened. Try again later.");
+                    });
+                });
             }
 
             libraryContext.EnsureSeedDataForContext();
 
+            InitializeAutoMapper();
+            
             app.UseMvc();
 
+        }
+
+        private void InitializeAutoMapper() {
+            AutoMapper.Mapper.Initialize(cfg => {
+                cfg.CreateMap<Entities.Author, Models.AuthorDto>()
+                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{ src.FirstName} {src.LastName}"))
+                    .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.GetCurrentAge()));
+                cfg.CreateMap<Entities.Book, Models.BookDto>();
+            });
         }
     }
 }
