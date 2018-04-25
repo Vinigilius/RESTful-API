@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using RESTfulAPI.Entities;
 using RESTfulAPI.Services;
 using RESTfulAPI.Helpers;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace RESTfulAPI
 {
@@ -28,7 +29,11 @@ namespace RESTfulAPI
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc(setupAction => {
+                setupAction.ReturnHttpNotAcceptable = true;
+                setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                setupAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
+            });
 
             var connectionString = Startup.Configuration["connectionStrings:libraryDBConncectionString"];
             services.AddDbContext<LibraryContext>(o => o.UseSqlServer(connectionString));
