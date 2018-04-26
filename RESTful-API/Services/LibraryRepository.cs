@@ -15,7 +15,6 @@ namespace RESTfulAPI.Services {
             author.Id = Guid.NewGuid();
             _context.Authors.Add(author);
 
-            // the repository fills the id (instead of using identity columns)
             if (author.Books.Any()) {
                 foreach (var book in author.Books) {
                     book.Id = Guid.NewGuid();
@@ -26,8 +25,6 @@ namespace RESTfulAPI.Services {
         public void AddBookForAuthor(Guid authorId, Book book) {
             var author = GetAuthor(authorId);
             if (author != null) {
-                // if there isn't an id filled out (ie: we're not upserting),
-                // we should generate one
                 if (book.Id == Guid.Empty) {
                     book.Id = Guid.NewGuid();
                 }
@@ -63,7 +60,7 @@ namespace RESTfulAPI.Services {
         }
 
         public void UpdateAuthor(Author author) {
-            // no code in this implementation
+
         }
 
         public Book GetBookForAuthor(Guid authorId, Guid bookId) {
@@ -77,7 +74,7 @@ namespace RESTfulAPI.Services {
         }
 
         public void UpdateBookForAuthor(Book book) {
-            // no code in this implementation
+
         }
 
         public bool Save() {

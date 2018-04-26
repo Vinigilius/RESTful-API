@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// Startup data for our library ASP.NET Core RESTful API
+/// </summary>
 namespace RESTfulAPI.Entities {
     public static class LibraryContextExtensions {
         public static void EnsureSeedDataForContext(this LibraryContext context) {
-            // first, clear the database.  This ensures we can always start 
-            // fresh with each demo.  Not advised for production environments, obviously :-)
 
             context.Authors.RemoveRange(context.Authors);
             context.SaveChanges();
