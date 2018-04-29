@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
 using RESTfulAPI.Entities;
 using RESTfulAPI.Models;
 using RESTfulAPI.Services;
@@ -10,8 +11,7 @@ using System.Threading.Tasks;
 namespace RESTfulAPI.Controllers
 {
     [Route("api/authors/{authorId}/books")]
-    public class BooksController : Controller
-    {
+    public class BooksController : Controller {
         private ILibraryRepository _libraryRepository;
 
         public BooksController(ILibraryRepository libraryRepository) {
@@ -32,7 +32,7 @@ namespace RESTfulAPI.Controllers
         }
 
         [HttpGet("{bookId}", Name = "GetBookForAuthor")]
-        public IActionResult GetBookForAuthor(Guid authorId,Guid bookId) {
+        public IActionResult GetBookForAuthor(Guid authorId, Guid bookId) {
             if (!_libraryRepository.AuthorExists(authorId)) {
                 return NotFound();
             }
@@ -49,7 +49,7 @@ namespace RESTfulAPI.Controllers
 
         [HttpPost()]
         public IActionResult CreateBookForAuthor(Guid authorId, [FromBody] BookForCreationDto book) {
-            if(book == null) {
+            if (book == null) {
                 return BadRequest();
             }
 
@@ -81,6 +81,90 @@ namespace RESTfulAPI.Controllers
             }
 
             _libraryRepository.DeleteBook(bookToDelete);
+
+            if (!_libraryRepository.Save()) {
+                throw new Exception("The was unhandled error while processing your request. Please try again later.");
+            }
+
+            return NoContent();
+        }
+
+        [HttpPut("{bookId}")]
+        public IActionResult UpdateBookForAuthor(Guid authorId, Guid bookId
+            [FromBody] BookForUpdateDto book) {
+            if (book == null) {
+                return BadRequest();
+            }
+
+            if (!_libraryRepository.AuthorExists(authorId)) {
+                return NotFound();
+            }
+
+            var bookToUpdate = _libraryRepository.GetBookForAuthor(authorId, bookId);
+            if (bookToUpdate == null) {
+                //upserting
+                var bookToAdd = AutoMapper.Mapper.Map<Book>(book);
+                bookToAdd.Id = bookId;
+
+                _libraryRepository.AddBookForAuthor(authorId, bookToAdd);
+
+                if (!_libraryRepository.Save()) {
+                    throw new Exception("The was unhandled error while processing your request. Please try again later.");
+                }
+
+                var bookToReturn = AutoMapper.Mapper.Map<BookDto>(bookToAdd);
+
+                return CreatedAtRoute("GetBookForAuthor", new { authorId = authorId, bookId = bookToReturn.Id }, bookToReturn);
+            }
+
+            AutoMapper.Mapper.Map(book, bookToUpdate);
+
+            _libraryRepository.UpdateBookForAuthor(bookToUpdate);
+
+            if (!_libraryRepository.Save()) {
+                throw new Exception("The was unhandled error while processing your request. Please try again later.");
+            }
+            return NoContent();
+        }
+
+        [HttpPatch("{bookId}")]
+        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid bookId
+            [FromBody] JsonPatchDocument<BookForUpdateDto> patchDocument) {
+
+            if(patchDocument == null) {
+                return BadRequest();
+            }
+
+            if (!_libraryRepository.AuthorExists(authorId)) {
+                return NotFound();
+            }
+
+            var bookToUpdate = _libraryRepository.GetBookForAuthor(authorId, bookId);
+            if (bookToUpdate == null) {
+                var bookDto = new BookForUpdateDto();
+                patchDocument.ApplyTo(bookDto);
+
+                var bookToAdd = AutoMapper.Mapper.Map<Book>(bookDto);
+                bookToAdd.Id = bookId;
+
+                _libraryRepository.AddBookForAuthor(authorId, bookToAdd);
+
+                if (!_libraryRepository.Save()) {
+                    throw new Exception("The was unhandled error while processing your request. Please try again later.");
+                }
+
+                var bookToReturn = AutoMapper.Mapper.Map<BookDto>(bookToAdd);
+
+                return CreatedAtRoute("GetBookForAuthor", new { authorId = authorId, bookId = bookToReturn.Id }, bookToReturn);
+            }
+
+            var bookToPatch = AutoMapper.Mapper.Map<BookForUpdateDto>(bookToUpdate);
+
+            patchDocument.ApplyTo(bookToPatch);
+
+            AutoMapper.Mapper.Map(bookToPatch, bookToUpdate);
+
+            _libraryRepository.UpdateBookForAuthor(bookToUpdate);
 
             if (!_libraryRepository.Save()) {
                 throw new Exception("The was unhandled error while processing your request. Please try again later.");
