@@ -13,6 +13,7 @@ using RESTfulAPI.Entities;
 using RESTfulAPI.Services;
 using RESTfulAPI.Helpers;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace RESTfulAPI
 {
@@ -48,8 +49,17 @@ namespace RESTfulAPI
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             } else {
-                app.UseExceptionHandler(appBuilder => {
+                app.UseExceptionHandler(appBuilder => {    
                     appBuilder.Run(async context => {
+
+                        var exception = context.Features.Get<IExceptionHandlerFeature>();
+                        if(exception != null) {
+                            var logger = loggerFactory.CreateLogger("Global error logger.");
+                            logger.LogError(500,
+                                exception.Error,
+                                "Something happend, and that's not good. Error: " + exception.Error.Message );
+                        }                        
+
                         context.Response.StatusCode = 500;
                         await context.Response.WriteAsync("Unexpected fault happened. Try again later.");
                     });

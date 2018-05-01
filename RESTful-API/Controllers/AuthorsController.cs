@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using RESTfulAPI.Entities;
 using RESTfulAPI.Models;
 using RESTfulAPI.Services;
@@ -13,13 +14,16 @@ namespace RESTfulAPI.Controllers
     [Route("api/authors")]
     public class AuthorsController : Controller {
         private ILibraryRepository _libraryRepository;
+        private ILogger<AuthorsController> _logger;
 
         /// <summary>
         /// Injection of library repository instance.
         /// </summary>
         /// <param name="libraryRepository">Library repository.</param>
-        public AuthorsController(ILibraryRepository libraryRepository) {
+        /// <param name="logger">Logger injection.</param>
+        public AuthorsController(ILibraryRepository libraryRepository, ILogger<AuthorsController> logger) {
             _libraryRepository = libraryRepository;
+            _logger = logger;
         }
 
         [HttpGet()]
@@ -41,7 +45,6 @@ namespace RESTfulAPI.Controllers
 
         [HttpPost("")]
         public IActionResult CreateAuthor([FromBody] AuthorForCreationDto author) {
-            /* Check data */
             if (author == null) {
                 return BadRequest();
             }
@@ -80,6 +83,8 @@ namespace RESTfulAPI.Controllers
             if (!_libraryRepository.Save()) {
                 throw new Exception("The was unhandled error while processing your request. Please try again later.");
             }
+
+            _logger.LogInformation(101, $"Author with {authorId} was deleted.");
 
             return NoContent();
         }

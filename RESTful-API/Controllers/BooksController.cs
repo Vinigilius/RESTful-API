@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using RESTfulAPI.Entities;
 using RESTfulAPI.Helpers;
 using RESTfulAPI.Models;
@@ -14,9 +15,11 @@ namespace RESTfulAPI.Controllers
     [Route("api/authors/{authorId}/books")]
     public class BooksController : Controller {
         private ILibraryRepository _libraryRepository;
+        private ILogger<BooksController> _logger;
 
-        public BooksController(ILibraryRepository libraryRepository) {
+        public BooksController(ILibraryRepository libraryRepository, ILogger<BooksController> logger) {
             _libraryRepository = libraryRepository;
+            _logger = logger;
         }
 
         [HttpGet()]
@@ -91,6 +94,8 @@ namespace RESTfulAPI.Controllers
             if (!_libraryRepository.Save()) {
                 throw new Exception("The was unhandled error while processing your request. Please try again later.");
             }
+
+            _logger.LogInformation(100, $"Book {bookId} was deleteg fom author {authorId}");
 
             return NoContent();
         }
