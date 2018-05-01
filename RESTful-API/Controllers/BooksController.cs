@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using RESTfulAPI.Entities;
+using RESTfulAPI.Helpers;
 using RESTfulAPI.Models;
 using RESTfulAPI.Services;
 using System;
@@ -53,6 +54,11 @@ namespace RESTfulAPI.Controllers
                 return BadRequest();
             }
 
+            CheckForAdditionalModelValidationsForBook(book);
+            if (!ModelState.IsValid) {
+                return new UnprocessibleEntityObjectResult(ModelState);
+            }
+
             if (!_libraryRepository.AuthorExists(authorId)) {
                 return NotFound();
             }
@@ -90,10 +96,15 @@ namespace RESTfulAPI.Controllers
         }
 
         [HttpPut("{bookId}")]
-        public IActionResult UpdateBookForAuthor(Guid authorId, Guid bookId
+        public IActionResult UpdateBookForAuthor(Guid authorId, Guid bookId,
             [FromBody] BookForUpdateDto book) {
             if (book == null) {
                 return BadRequest();
+            }
+
+            CheckForAdditionalModelValidationsForBook(book);
+            if (!ModelState.IsValid) {
+                return new UnprocessibleEntityObjectResult(ModelState);
             }
 
             if (!_libraryRepository.AuthorExists(authorId)) {
@@ -128,7 +139,7 @@ namespace RESTfulAPI.Controllers
         }
 
         [HttpPatch("{bookId}")]
-        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid bookId
+        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid bookId,
             [FromBody] JsonPatchDocument<BookForUpdateDto> patchDocument) {
 
             if(patchDocument == null) {
@@ -142,7 +153,12 @@ namespace RESTfulAPI.Controllers
             var bookToUpdate = _libraryRepository.GetBookForAuthor(authorId, bookId);
             if (bookToUpdate == null) {
                 var bookDto = new BookForUpdateDto();
-                patchDocument.ApplyTo(bookDto);
+                patchDocument.ApplyTo(bookDto, ModelState);
+
+                CheckForAdditionalModelValidationsForBook(bookDto);
+                if (!ModelState.IsValid) {
+                    return new UnprocessibleEntityObjectResult(ModelState);
+                }
 
                 var bookToAdd = AutoMapper.Mapper.Map<Book>(bookDto);
                 bookToAdd.Id = bookId;
@@ -160,7 +176,12 @@ namespace RESTfulAPI.Controllers
 
             var bookToPatch = AutoMapper.Mapper.Map<BookForUpdateDto>(bookToUpdate);
 
-            patchDocument.ApplyTo(bookToPatch);
+            patchDocument.ApplyTo(bookToPatch, ModelState);
+
+            CheckForAdditionalModelValidationsForBook(bookToPatch);
+            if (!ModelState.IsValid) {
+                return new UnprocessibleEntityObjectResult(ModelState);
+            }
 
             AutoMapper.Mapper.Map(bookToPatch, bookToUpdate);
 
@@ -172,5 +193,16 @@ namespace RESTfulAPI.Controllers
 
             return NoContent();
         }
+
+        #region AdditionalFeatures
+        private void CheckForAdditionalModelValidationsForBook(BookForManipulationDto book) {
+            //Ttitle and the description cannot be the same
+            if (book.Title == book.Description) {
+                ModelState.AddModelError("Title/Description", "The provided title and descripton cannot be the same.");
+            }
+            TryValidateModel(book);
+        }
+        #endregion
+
     }
 }
