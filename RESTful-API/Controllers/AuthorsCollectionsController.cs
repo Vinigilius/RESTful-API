@@ -20,13 +20,13 @@ namespace RESTfulAPI.Controllers
         }
 
         [HttpGet("({authorsIds})", Name = "GetAuthorCollection")]
-        public IActionResult GetAuthorCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> authorsIds) {
+        public async Task<IActionResult> GetAuthorCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> authorsIds) {
 
             if(authorsIds == null) {
                 return BadRequest();
             }
 
-            var authorsEntities = _libraryRepository.GetAuthors(authorsIds);
+            var authorsEntities = await _libraryRepository.GetAuthors(authorsIds);
 
             if(authorsEntities.Count() != authorsIds.Count()) {
                 return NotFound();

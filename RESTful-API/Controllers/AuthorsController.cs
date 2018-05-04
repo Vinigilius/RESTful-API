@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RESTfulAPI.Entities;
 using RESTfulAPI.Models;
 using RESTfulAPI.Services;
+using RESTfulAPI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace RESTfulAPI.Controllers
         private ILibraryRepository _libraryRepository;
         private ILogger<AuthorsController> _logger;
 
+        const int maximumPageSize = 20;
+
         /// <summary>
         /// Injection of library repository instance.
         /// </summary>
@@ -27,9 +30,11 @@ namespace RESTfulAPI.Controllers
         }
 
         [HttpGet()]
-        public IActionResult GetAuthors() {
+        public async Task<IActionResult> GetAuthors([FromQuery] AuthorsResourceParamenters authorsResourceParamenters) {
 
-            var authors = AutoMapper.Mapper.Map<IEnumerable<AuthorDto>>(_libraryRepository.GetAuthors());
+            var authorsFromRepo = await _libraryRepository.GetAuthors(authorsResourceParamenters);
+
+            var authors = AutoMapper.Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo);
 
             return Ok(authors);
         }
@@ -41,7 +46,7 @@ namespace RESTfulAPI.Controllers
                 return NotFound();
             }
             return Ok(author);
-        }
+        } 
 
         [HttpPost("")]
         public IActionResult CreateAuthor([FromBody] AuthorForCreationDto author) {

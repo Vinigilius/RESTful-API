@@ -1,12 +1,14 @@
 ﻿using RESTfulAPI.Entities;
+using RESTfulAPI.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RESTfulAPI.Services {
     public interface ILibraryRepository {
-        IEnumerable<Author> GetAuthors();
+        Task<IEnumerable<Author>> GetAuthors(AuthorsResourceParamenters authorsResourceParamenters);
         Author GetAuthor(Guid authorId);
-        IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds);
+        Task<IEnumerable<Author>> GetAuthors(IEnumerable<Guid> authorIds);
         void AddAuthor(Author author);
         void DeleteAuthor(Author author);
         void UpdateAuthor(Author author);
